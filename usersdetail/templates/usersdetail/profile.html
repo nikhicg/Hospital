@@ -1,0 +1,31 @@
+{% extends 'usersdetail/base.html' %}
+{% load crispy_forms_tags %}
+{% block main %}
+<div class="left">
+    {% if user.is_authenticated %}
+        <a class="nav-item nav-link" href="{% url 'logout' %}"><b>Logout</b></a>
+    {% endif %}
+</div><br><br>
+    <div class="content-section">
+        <div class="media">
+            <img class="rounded-circle account-img" src="{{ user.profile_picture.url }}" style="height: 200px; width: 200px;">
+            <div class="media-body">
+                <h2 class="account-heading">{{ user.type_user }}</h2>
+                <h2 class="account-heading">{{ user.username }}</h2>
+                <p class="text-secondary">{{ user.email }}</p>
+            </div>
+        </div>
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">
+                    Profile Info
+                </legend>
+                {{ u_form|crispy }}
+            </fieldset>
+            <div class="form-group">
+                <button class="btn btn-outline-info" type="submit">Update</button>
+            </div>
+        </form>
+    </div>
+{% endblock main %}
