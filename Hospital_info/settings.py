@@ -31,6 +31,7 @@ AUTH_USER_MODEL = 'usersdetail.CustomUser'
 # Application definition
 
 INSTALLED_APPS = [
+    'Blog',
     'usersdetail',
     'crispy_forms',
     'django.contrib.admin',
@@ -77,8 +78,12 @@ WSGI_APPLICATION = 'Hospital_info.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'hospital_data',
+                'USER': 'dbadmin',
+                'PASSWORD': 'togrocks',
+                'HOST': 'localhost',
+                'PORT': '3306',
     }
 }
 

@@ -1,0 +1,74 @@
+{% extends 'Blog/base.html' %}
+{% block content %}
+{% load static %}
+<div class="row justify-content-left p-2" style="background-color:black;">
+    <div class="col-8">
+    <form action = "{% url 'search' %}" method = "POST">
+    {% csrf_token %}
+    <input class="form-control mr-sm-2" id="your_name" type="text" placeholder="Search by title..." name="your_name">
+    </form>
+    </div>
+    <div class="col-4">
+        <!-- Example single danger button -->
+        <div class="btn-group">
+            <button type="button" class="btn btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+            Category
+            </button>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="/post/Mental_Health">Mental Health</a>
+                <a class="dropdown-item" href="/post/Heart_Disease">Heart Disease</a>
+                <a class="dropdown-item" href="/post/Covid19">Covid19</a>
+                <a class="dropdown-item" href="/post/Immunization">Immunization</a>
+            </div>
+        </div>
+    </div>
+</div>
+<br>
+<br>
+    {% for post in posts %}
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card ">
+                        <h5 class="card-header"><!--user.profile.image.url-->
+                            <img class="rounded-circle article-img" src="{{ user.profile_picture.url }}" alt="ads" style="height: 40px; width: 40px;">
+                            <a href="">{{ post.author }}</a>
+                        </h5>
+                        <div class="card-body">
+                            <h4 class="card-title">
+                                <img src="{{post.image.url}}" class="rounded float-right ml-3" alt="..." style="height: 150px; width: 150px;">
+                                <a href="{% url 'post-detail' post.slug %}"><p class="card-text text-dark text-justify"><b>{{post.title}}</b></p></a>
+                            </h4>
+                            {% if post.summary %}
+                            <p class="card-text text-justify mr-1">{{ post.summary|truncatewords:15 }}</p>
+                            {% endif %}
+                            <p class="card-text text-justify">{{post.category}}</p>
+                            {% load tz %}
+                            <small class="text-muted text-left ">{{ post.date_posted|timezone:"Asia/Kolkata"|date:"F d, Y" }}</small>
+                            <small class="text-muted text-left p-3">5 min reads</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        {% endfor %}
+    {% if is_paginated %}
+        {% if page_obj.has_previous %}
+            <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+            <!--<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number">Previous</a>-->
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+            {% elif num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %}
+                <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+            <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+        {% endif %}
+    {% endif %}
+
+{% endblock content %}
