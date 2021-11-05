@@ -31,6 +31,7 @@ AUTH_USER_MODEL = 'usersdetail.CustomUser'
 # Application definition
 
 INSTALLED_APPS = [
+    'appointment',
     'Blog',
     'usersdetail',
     'crispy_forms',

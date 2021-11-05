@@ -1,0 +1,43 @@
+{% extends 'Blog/base.html' %}
+{% block content %}
+{% load static %}
+    <div class="col-8">
+        <form action = "{% url 'search-doctor' %}" method = "POST">
+        {% csrf_token %}
+        <input class="form-control mr-sm-2" id="doctor_name" type="text" placeholder="Search by name..." name="doctor_name">
+        </form>
+    </div>
+    <br><br>
+    <h2>Doctor's List</h2>
+    {% for doc in doctor %}
+        <div class="content-section">
+            <div class="media">
+                <img class="rounded-circle account-img" src="{{ doc.profile_picture.url }}" style="height: 100px; width: 100px;">
+                <div class="media-body">
+                    <h4 ><a href="{% url 'profile-detail' doc.id %}">{{ doc.type_user }} {{ doc.first_name }} {{ doc.last_name }}</a></h4>
+                    <h6>{{doc.email_id}}</h6>
+                    <h6>{{doc.state}}</h6>
+                    <h6>{{doc.city}}</h6>
+                    <p class="card-text text-justify">{{doc.address_line1}} </p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+    {% if is_paginated %}
+    {% if page_obj.has_previous %}
+        <a class="btn btn-outline-info mb-4" href="?page=1">First</a>
+        <!--<a class="btn btn-outline-info mb-4" href="?page={{ page_obj.previous_page_number">Previous</a>-->
+    {% endif %}
+    {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <a class="btn btn-info mb-4" href="?page={{ num }}">{{ num }}</a>
+        {% elif num > page_obj.number|add:'-2' and num < page_obj.number|add:'2' %}
+            <a class="btn btn-outline-info mb-4" href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+    {% if page_obj.has_next %}
+        <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.next_page_number }}">Next</a>
+        <a class="btn btn-outline-info mb-4" href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+    {% endif %}
+{% endif %}
+{% endblock content %}

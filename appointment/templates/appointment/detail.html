@@ -1,0 +1,10 @@
+{% extends 'blog/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+{% for i in a %}
+<h2>Doctor name:  {{i.doctor}}<br>
+Date of Appointment:  {{i.date_of_appointment}}<br>
+Start time:{{i.start_time_of_appointment}}<br>
+End Time: {{i.end_time_of_appointment}}</h2><br>
+{% endfor %}
+{% endblock content %}

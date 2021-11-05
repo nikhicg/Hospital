@@ -1,0 +1,22 @@
+{% extends 'Blog/base.html' %}
+{% block content %}
+{% load static %}
+<div class="container">
+  <div class="row justify-content-left">
+    <div class="col-10">
+      <h2 class="text-center"><b>{{doctor_name.username}}</b></h2>
+      <div class="row justify-content-center">
+        <div class="col-10">
+          <img class="rounded-circle article-img rounded float-left" src="{{ doctor_name.profile_picture.url }}" alt="ads" style="height: 100px; width: 100px;">
+          <h4>{{doctor_name.type_user}} {{doctor_name.first_name}} {{doctor_name.last_name}}</h4>
+          <small class="text-muted text-left">{{doctor_name.email_id}}</small><br><br><br><br><br>
+          <a href="{% url 'create-appointment' doctor_name.username %}"><button class="btn btn-outline-info" type="submit">Book Appointment</button></a>
+        </div>
+      </div>
+      <br>
+        
+    </div>
+  </div>
+</div>
+    <br>
+{% endblock content %}

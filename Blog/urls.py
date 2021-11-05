@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import path
 from . import views
 from .views import PostCreateView, PostListView, PostUpdateView, PostDetailView, PostDeleteView, FieldPostListView, DraftListView
+
+
 urlpatterns = [
     path('post/create/', PostCreateView.as_view(), name='post-create'),
     path('', PostListView.as_view(), name='post-list'),

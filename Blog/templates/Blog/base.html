@@ -41,7 +41,10 @@
                 <div class="navbar-nav mr-auto">
                   <a class="nav-item nav-link" href="{% url 'post-list' %}"><b>Home</b></a>
                   {% if user.is_authenticated %}
+                  {% if user.type_user == 'Doctor' %}
                   <a class="nav-item nav-link" href="{% url 'draft' request.user %}"><b>Draft</b></a>
+                  {% endif %}
+                  <a class="nav-item nav-link" href="{% url 'doctor' %}"><b>Doctors</b></a>
                   {% endif %}
                 </div>
                 <!-- Navbar Right Side -->
@@ -94,6 +97,14 @@ integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRk
             autoFocus:true
           });
     });
+</script>
+<script>
+  $(function(){
+      $("#doctor_name").autocomplete({
+          source: "{% url 'search-doctor' %}",
+          autoFocus:true
+        });
+  });
 </script>
   </script>
 </body>
