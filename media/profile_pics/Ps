@@ -1,0 +1,63 @@
+# drive_space_prom.ps1
+Param(
+  [string]$DriveLetter = "Z:",                     # e.g. "Z:"
+  [string]$TextfileDir = "C:\Program Files\windows_exporter\textfile_inputs",
+  [string]$MetricPrefix = "windows_mapped_drive"
+)
+
+# ensure directory exists
+if (-not (Test-Path $TextfileDir)) {
+  New-Item -ItemType Directory -Path $TextfileDir -Force | Out-Null
+}
+
+# try to get disk info via CIM/WMI
+try {
+  $filter = "DeviceID='$DriveLetter'"
+  $disk = Get-CimInstance -ClassName Win32_LogicalDisk -Filter $filter -ErrorAction Stop
+} catch {
+  $disk = $null
+}
+
+if (-not $disk) {
+  # Option A: mapped-drive not visible to this session (common for services). 
+  # Option B: you could map the drive (net use) here if you have creds.
+  Write-Output "ERROR: Could not find drive $DriveLetter. Exiting." 1>&2
+  exit 1
+}
+
+$free = [int64]$disk.FreeSpace
+$total = [int64]$disk.Size
+$used = $total - $free
+$percent_free = 0
+if ($total -gt 0) { $percent_free = ($free / $total) * 100.0 }
+
+# Build Prometheus text output (must end with a newline)
+$content = @()
+$content += "# HELP ${MetricPrefix}_free_bytes Free bytes on mapped drive"
+$content += "# TYPE ${MetricPrefix}_free_bytes gauge"
+$content += "${MetricPrefix}_free_bytes{drive=`"$DriveLetter`"} $free"
+$content += ""
+$content += "# HELP ${MetricPrefix}_total_bytes Total bytes on mapped drive"
+$content += "# TYPE ${MetricPrefix}_total_bytes gauge"
+$content += "${MetricPrefix}_total_bytes{drive=`"$DriveLetter`"} $total"
+$content += ""
+$content += "# HELP ${MetricPrefix}_percent_free Percent free on mapped drive (0-100)"
+$content += "# TYPE ${MetricPrefix}_percent_free gauge"
+$content += "${MetricPrefix}_percent_free{drive=`"$DriveLetter`"} $percent_free"
+$contentString = ($content -join "`n") + "`n"   # ensure final newline
+
+# atomic write: write to temp file then move
+$finalFile = Join-Path $TextfileDir ("drive_" + $DriveLetter.TrimEnd(':') + ".prom")
+$tmpFile = $finalFile + ".tmp"
+
+try {
+  # use ASCII or UTF8 without BOM - textfile collector expects plain text
+  Set-Content -Path $tmpFile -Value $contentString -Encoding ASCII -Force
+  Move-Item -Path $tmpFile -Destination $finalFile -Force
+} catch {
+  Write-Output "ERROR writing metrics file: $_" 1>&2
+  exit 2
+}
+
+# exit success
+exit 0
