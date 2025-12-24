@@ -1,0 +1,85 @@
+import os
+import time
+from multiprocessing import Pool, cpu_count
+
+# Configuration
+FILE_PATH = "data_output.etd"
+LINES_PER_BATCH = 1000  
+TOTAL_BATCHES = 10
+BUFFER_SIZE = 64 * 1024 
+INACTIVITY_TIMEOUT = 10  # Seconds to wait before assuming producer is done
+
+def parse_batch(batch_info):
+    batch_id, start_offset, end_offset = batch_info
+    if start_offset == end_offset: return f"Batch {batch_id} skipped (empty)"
+    
+    print(f"[Batch {batch_id}] Processing bytes {start_offset} to {end_offset}")
+    # ... parsing logic ...
+    time.sleep(2) 
+    return f"Batch {batch_id} Success"
+
+def line_monitor_manager():
+    batches_started = 0
+    total_line_count = 0
+    last_marker_offset = 0
+    last_data_time = time.time()
+    
+    pool = Pool(processes=min(TOTAL_BATCHES, cpu_count()))
+    async_results = []
+
+    print(f"Monitoring {FILE_PATH}...")
+
+    while not os.path.exists(FILE_PATH):
+        time.sleep(1)
+
+    with open(FILE_PATH, 'rb') as f:
+        while batches_started < TOTAL_BATCHES:
+            buffer = f.read(BUFFER_SIZE)
+            
+            if buffer:
+                last_data_time = time.time() # Reset timeout clock
+                buffer_lines = buffer.count(b'\n')
+                
+                # Check if this buffer completes the next batch
+                if total_line_count + buffer_lines >= (batches_started + 1) * LINES_PER_BATCH:
+                    f.seek(last_marker_offset)
+                    lines_needed = ((batches_started + 1) * LINES_PER_BATCH) - total_line_count
+                    for _ in range(lines_needed):
+                        f.readline()
+                    
+                    current_offset = f.tell()
+                    
+                    # Launch Batch
+                    res = pool.apply_async(parse_batch, ((batches_started, last_marker_offset, current_offset),))
+                    async_results.append(res)
+                    
+                    last_marker_offset = current_offset
+                    total_line_count += lines_needed
+                    batches_started += 1
+                    f.seek(current_offset)
+                else:
+                    total_line_count += buffer_lines
+            else:
+                # NO NEW DATA: Check for Timeout or Finalization
+                time_elapsed = time.time() - last_data_time
+                
+                # Check if we should force-trigger the remaining data
+                if time_elapsed > INACTIVITY_TIMEOUT:
+                    f.seek(0, os.SEEK_END)
+                    final_offset = f.tell()
+                    
+                    if final_offset > last_marker_offset:
+                        print(f"--> Timeout reached. Flushing final data to Batch {batches_started}")
+                        res = pool.apply_async(parse_batch, ((batches_started, last_marker_offset, final_offset),))
+                        async_results.append(res)
+                        batches_started += 1
+                    break # Exit the while loop
+                
+                time.sleep(1)
+
+    pool.close()
+    pool.join()
+    print("All jobs finished. Manager exiting.")
+
+if __name__ == "__main__":
+    line_monitor_manager()
